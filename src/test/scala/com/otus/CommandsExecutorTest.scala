@@ -11,7 +11,43 @@ import org.scalatest.wordspec.AnyWordSpecLike
 class CommandsExecutorTest extends AnyWordSpecLike with Matchers with MockFactory {
 
   "commands executor" should {
-    "handle exception" in {
+    "retry command and write to log" in {
+      val queue = mock[Queue]
+
+      val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
+      exceptionsHandlersResolver.register("*", "*", RetryableExceptionHandler(queue))
+      exceptionsHandlersResolver.register("*", "RetryCommand", LoggingExceptionHandler(queue))
+
+      val commandsExecutor = new CommandsExecutorImpl(queue, exceptionsHandlersResolver)
+
+      val commandWithException = new Command {
+        override def execute() = throw new Exception("test exception")
+      }
+      val retryCommand = RetryCommand(new Retryable {
+        override def getCommand = commandWithException
+      })
+
+      (() => queue.pop).expects().returns(commandWithException)
+      (queue.push _).expects(where {
+        (r: Command) => r match {
+          case c: RetryCommand => c.retryable.getCommand == commandWithException
+          case _ => false
+        }
+      })
+
+      (() => queue.pop).expects().returns(retryCommand)
+      (queue.push _).expects(where {
+        (r: Command) => r match {
+          case c: LogExceptionCommand => c.exceptionLogable.getCommand == retryCommand
+          case _ => false
+        }
+      })
+
+      commandsExecutor.executeCommand()
+      commandsExecutor.executeCommand()
+    }
+
+    "retry command 2 times and write to log" in {
       val queue = mock[Queue]
 
       val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
