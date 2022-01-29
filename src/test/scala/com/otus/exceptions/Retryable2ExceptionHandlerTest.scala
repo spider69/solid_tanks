@@ -1,14 +1,14 @@
 package com.otus.exceptions
 
-import com.otus.commands.{Command, RetryCommand}
+import com.otus.commands.{Command, Retry2Command}
 import com.otus.queue.Queue
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class RetryableExceptionHandlerTest extends AnyWordSpecLike with Matchers with MockFactory {
+class Retryable2ExceptionHandlerTest extends AnyWordSpecLike with Matchers with MockFactory {
 
-  "retryable exception handler" should {
+  "retryable2 exception handler" should {
     "place incoming command to queue" in {
       val queue: Queue = mock[Queue]
       val exception: Exception = new Exception("test exception")
@@ -16,11 +16,11 @@ class RetryableExceptionHandlerTest extends AnyWordSpecLike with Matchers with M
 
       (queue.push _).expects(where {
         (c: Command) => c match {
-          case RetryCommand(retryable) => retryable.getCommand == command
+          case Retry2Command(retryable) => retryable.getCommand == command
         }
       })
 
-      val retryableExceptionHandler = RetryableExceptionHandler(queue)
+      val retryableExceptionHandler = Retryable2ExceptionHandler(queue)
       retryableExceptionHandler.handle(exception, command)
     }
   }

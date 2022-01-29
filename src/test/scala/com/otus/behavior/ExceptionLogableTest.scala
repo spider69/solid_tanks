@@ -1,3 +1,5 @@
+package com.otus.behavior
+
 import com.otus.UObject
 import com.otus.adapters.LogExceptionAdapter
 import com.otus.commands.{Command, LogExceptionCommand}
@@ -26,7 +28,7 @@ class ExceptionLogableTest extends AnyWordSpecLike with Matchers with MockFactor
 
   private def executeLogExceptionCommand(obj: UObject): Unit = {
     val logExceptionAdapter = new LogExceptionAdapter(obj)
-    val logExceptionCommand = new LogExceptionCommand(logExceptionAdapter)
+    val logExceptionCommand = LogExceptionCommand(logExceptionAdapter)
     logExceptionCommand.execute()
   }
 

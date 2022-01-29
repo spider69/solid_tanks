@@ -1,20 +1,30 @@
 package com.otus.exceptions
 
-import com.otus.commands.Command
-
 import scala.collection.mutable
 
 trait ExceptionsHandlersResolver {
-  def register(exception: Exception, command: Command, resolver: ExceptionsHandler): Unit
-  def resolve(exception: Exception, command: Command): ExceptionsHandler
+  def register(exceptionClassName: String, commandClassName: String, handler: ExceptionsHandler): Unit
+  def resolve(exceptionClassName: String, commandName: String): ExceptionsHandler
 }
 
 class ExceptionsHandlersResolverImpl extends ExceptionsHandlersResolver {
-  private val handlers: mutable.Map[(Exception, Command), ExceptionsHandler] = new mutable.HashMap[(Exception, Command), ExceptionsHandler]()
+  private val handlers: mutable.Map[(String, String), ExceptionsHandler] = new mutable.HashMap[(String, String), ExceptionsHandler]()
 
-  override def register(exception: Exception, command: Command, resolver: ExceptionsHandler): Unit =
-    handlers.put((exception, command), resolver)
+  override def register(exceptionClassName: String, commandClassName: String, handler: ExceptionsHandler): Unit =
+    handlers.put((exceptionClassName, commandClassName), handler)
 
-  override def resolve(exception: Exception, command: Command): ExceptionsHandler =
-    handlers.getOrElse((exception, command), throw new IllegalArgumentException(s"There is no exception handler for ($exception, $command)"))
+  override def resolve(exceptionClassName: String, commandClassName: String): ExceptionsHandler =
+    handlers
+      .get((exceptionClassName, commandClassName))
+      .orElse(findHandlerForAnyException(commandClassName))
+      .orElse(getDefaultHandler)
+      .getOrElse(throw new IllegalArgumentException(s"Exception handler is not defined for ($exceptionClassName, $commandClassName)"))
+
+  private def findHandlerForAnyException(commandClassName: String): Option[ExceptionsHandler] =
+    handlers.find {
+      case ((exception, command), _) => exception == "*" && command == commandClassName
+    }.map(_._2)
+
+  private def getDefaultHandler: Option[ExceptionsHandler] =
+    handlers.get(("*", "*"))
 }

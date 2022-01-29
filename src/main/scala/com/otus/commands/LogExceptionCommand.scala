@@ -1,8 +1,8 @@
 package com.otus.commands
 
-import com.otus.ExceptionLogable
+import com.otus.behavior.ExceptionLogable
 
-class LogExceptionCommand(exceptionLogable: ExceptionLogable) extends Command {
+case class LogExceptionCommand(exceptionLogable: ExceptionLogable) extends Command {
 
   override def execute(): Unit = {
     val logger = exceptionLogable.getLogger

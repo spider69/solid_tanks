@@ -2,7 +2,8 @@ package com.otus.adapters
 
 import com.otus.commands.Command
 import com.otus.logger.Logger
-import com.otus.{ExceptionLogable, UObject}
+import com.otus.UObject
+import com.otus.behavior.ExceptionLogable
 
 class LogExceptionAdapter(obj: UObject) extends ExceptionLogable {
   override def getLogger: Logger =
