@@ -2,6 +2,7 @@ package com.otus
 
 import com.otus.behavior.Retryable
 import com.otus.commands.{Command, LogExceptionCommand, Retry2Command, RetryCommand}
+import com.otus.exceptions.ExceptionsHandlersResolverImpl.{AnyCommand, AnyException}
 import com.otus.exceptions.{ExceptionsHandlersResolverImpl, LoggingExceptionHandler, Retryable2ExceptionHandler, RetryableExceptionHandler}
 import com.otus.queue.Queue
 import org.scalamock.scalatest.MockFactory
@@ -15,8 +16,8 @@ class CommandsExecutorTest extends AnyWordSpecLike with Matchers with MockFactor
       val queue = mock[Queue]
 
       val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
-      exceptionsHandlersResolver.register("*", "*", RetryableExceptionHandler(queue))
-      exceptionsHandlersResolver.register("*", "RetryCommand", LoggingExceptionHandler(queue))
+      exceptionsHandlersResolver.register(AnyException, AnyCommand, RetryableExceptionHandler(queue))
+      exceptionsHandlersResolver.register(AnyException, "RetryCommand", LoggingExceptionHandler(queue))
 
       val commandsExecutor = new CommandsExecutorImpl(queue, exceptionsHandlersResolver)
 
@@ -51,9 +52,9 @@ class CommandsExecutorTest extends AnyWordSpecLike with Matchers with MockFactor
       val queue = mock[Queue]
 
       val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
-      exceptionsHandlersResolver.register("*", "*", RetryableExceptionHandler(queue))
-      exceptionsHandlersResolver.register("*", "RetryCommand", Retryable2ExceptionHandler(queue))
-      exceptionsHandlersResolver.register("*", "Retry2Command", LoggingExceptionHandler(queue))
+      exceptionsHandlersResolver.register(AnyException, AnyCommand, RetryableExceptionHandler(queue))
+      exceptionsHandlersResolver.register(AnyException, "RetryCommand", Retryable2ExceptionHandler(queue))
+      exceptionsHandlersResolver.register(AnyException, "Retry2Command", LoggingExceptionHandler(queue))
 
       val commandsExecutor = new CommandsExecutorImpl(queue, exceptionsHandlersResolver)
 

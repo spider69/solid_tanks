@@ -18,7 +18,7 @@ class CommandsExecutorImpl(
       command.execute()
     } catch {
       case e: Exception =>
-        val handler = exceptionsHandlersResolver.resolve(e.getClass.getSimpleName, command.getClass.getSimpleName)
+        val handler = exceptionsHandlersResolver.resolve(e, command)
         handler.handle(e, command)
     }
   }
