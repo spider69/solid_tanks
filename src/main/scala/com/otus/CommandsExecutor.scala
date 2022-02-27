@@ -1,6 +1,6 @@
 package com.otus
 
-import com.otus.exceptions.ExceptionsHandlersResolver
+import com.otus.exceptions.resolvers.ExceptionHandlersResolver
 import com.otus.queue.Queue
 
 trait CommandsExecutor {
@@ -9,7 +9,7 @@ trait CommandsExecutor {
 
 class CommandsExecutorImpl(
   queue: Queue,
-  exceptionsHandlersResolver: ExceptionsHandlersResolver
+  exceptionHandlersResolver: ExceptionHandlersResolver
 ) extends CommandsExecutor {
 
   override def executeCommand(): Unit = {
@@ -18,7 +18,7 @@ class CommandsExecutorImpl(
       command.execute()
     } catch {
       case e: Exception =>
-        val handler = exceptionsHandlersResolver.resolve(e, command)
+        val handler = exceptionHandlersResolver.resolve(e, command)
         handler.handle(e, command)
     }
   }

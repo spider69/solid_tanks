@@ -1,6 +1,6 @@
-package com.otus.exceptions
+package com.otus.exceptions.handlers
 
-import com.otus.commands.{Command, LogExceptionCommand, Retry2Command}
+import com.otus.commands.{Command, LogExceptionCommand}
 import com.otus.queue.Queue
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers

@@ -1,4 +1,4 @@
-package com.otus.exceptions
+package com.otus.exceptions.handlers
 
 import com.otus.commands.{Command, Retry2Command}
 import com.otus.queue.Queue

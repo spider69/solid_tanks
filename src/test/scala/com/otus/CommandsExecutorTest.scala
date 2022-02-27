@@ -1,9 +1,8 @@
 package com.otus
 
-import com.otus.behavior.Retryable
-import com.otus.commands.{Command, LogExceptionCommand, Retry2Command, RetryCommand}
-import com.otus.exceptions.ExceptionsHandlersResolverImpl.{AnyCommand, AnyException}
-import com.otus.exceptions.{ExceptionsHandlersResolverImpl, LoggingExceptionHandler, Retryable2ExceptionHandler, RetryableExceptionHandler}
+import com.otus.commands.Command
+import com.otus.exceptions.handlers.ExceptionsHandler
+import com.otus.exceptions.resolvers.ExceptionHandlersResolver
 import com.otus.queue.Queue
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
@@ -12,90 +11,36 @@ import org.scalatest.wordspec.AnyWordSpecLike
 class CommandsExecutorTest extends AnyWordSpecLike with Matchers with MockFactory {
 
   "commands executor" should {
-    "retry command and write to log" in {
-      val queue = mock[Queue]
+    "execute command from queue" in {
+      val queue: Queue = mock[Queue]
+      val exceptionHandlersResolver = mock[ExceptionHandlersResolver]
+      val command = mock[Command]
 
-      val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
-      exceptionsHandlersResolver.register(AnyException, AnyCommand, RetryableExceptionHandler(queue))
-      exceptionsHandlersResolver.register(AnyException, "RetryCommand", LoggingExceptionHandler(queue))
+      (() => queue.pop).expects().returns(command)
+      (() => command.execute()).expects()
 
-      val commandsExecutor = new CommandsExecutorImpl(queue, exceptionsHandlersResolver)
-
-      val commandWithException = new Command {
-        override def execute() = throw new Exception("test exception")
-      }
-      val retryCommand = RetryCommand(new Retryable {
-        override def getCommand = commandWithException
-      })
-
-      (() => queue.pop).expects().returns(commandWithException)
-      (queue.push _).expects(where {
-        (r: Command) => r match {
-          case c: RetryCommand => c.retryable.getCommand == commandWithException
-          case _ => false
-        }
-      })
-
-      (() => queue.pop).expects().returns(retryCommand)
-      (queue.push _).expects(where {
-        (r: Command) => r match {
-          case c: LogExceptionCommand => c.exceptionLogable.getCommand == retryCommand
-          case _ => false
-        }
-      })
-
-      commandsExecutor.executeCommand()
-      commandsExecutor.executeCommand()
+      val executor = new CommandsExecutorImpl(queue, exceptionHandlersResolver)
+      executor.executeCommand()
     }
 
-    "retry command 2 times and write to log" in {
-      val queue = mock[Queue]
+    "resolve exception while execute" in {
+      val queue: Queue = mock[Queue]
+      val exceptionHandlersResolver = mock[ExceptionHandlersResolver]
+      val exceptionHandler = mock[ExceptionsHandler]
 
-      val exceptionsHandlersResolver = new ExceptionsHandlersResolverImpl
-      exceptionsHandlersResolver.register(AnyException, AnyCommand, RetryableExceptionHandler(queue))
-      exceptionsHandlersResolver.register(AnyException, "RetryCommand", Retryable2ExceptionHandler(queue))
-      exceptionsHandlersResolver.register(AnyException, "Retry2Command", LoggingExceptionHandler(queue))
+      val exception = new IllegalArgumentException("Test exception")
+      val command = FailedCommand(exception)
 
-      val commandsExecutor = new CommandsExecutorImpl(queue, exceptionsHandlersResolver)
+      (() => queue.pop).expects().returns(command)
+      (exceptionHandlersResolver.resolve _).expects(exception, command).returns(exceptionHandler)
+      (exceptionHandler.handle _).expects(exception, command)
 
-      val commandWithException = new Command {
-        override def execute() = throw new Exception("test exception")
-      }
-      val retryCommand = RetryCommand(new Retryable {
-        override def getCommand = commandWithException
-      })
-      val retry2Command = Retry2Command(new Retryable {
-        override def getCommand = commandWithException
-      })
-
-      (() => queue.pop).expects().returns(commandWithException)
-      (queue.push _).expects(where {
-        (r: Command) => r match {
-          case c: RetryCommand => c.retryable.getCommand == commandWithException
-          case _ => false
-        }
-      })
-
-      (() => queue.pop).expects().returns(retryCommand)
-      (queue.push _).expects(where {
-        (r: Command) => r match {
-          case c: Retry2Command => c.retryable.getCommand == commandWithException
-          case _ => false
-        }
-      })
-
-      (() => queue.pop).expects().returns(retry2Command)
-      (queue.push _).expects(where {
-        (r: Command) => r match {
-          case c: LogExceptionCommand => c.exceptionLogable.getCommand == retry2Command
-          case _ => false
-        }
-      })
-
-      commandsExecutor.executeCommand()
-      commandsExecutor.executeCommand()
-      commandsExecutor.executeCommand()
+      val executor = new CommandsExecutorImpl(queue, exceptionHandlersResolver)
+      executor.executeCommand()
     }
   }
 
+  case class FailedCommand(exception: Exception) extends Command {
+    override def execute() = throw exception
+  }
 }

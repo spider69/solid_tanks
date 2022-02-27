@@ -1,4 +1,4 @@
-package com.otus.exceptions
+package com.otus.exceptions.handlers
 
 import com.otus.behavior.ExceptionLogable
 import com.otus.commands.{Command, LogExceptionCommand}

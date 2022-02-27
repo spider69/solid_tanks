@@ -1,4 +1,4 @@
-package com.otus.exceptions
+package com.otus.exceptions.handlers
 
 import com.otus.behavior.Retryable
 import com.otus.commands.{Command, RetryCommand}
