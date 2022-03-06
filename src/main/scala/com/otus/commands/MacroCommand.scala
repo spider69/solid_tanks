@@ -1,6 +1,6 @@
 package com.otus.commands
 
-case class MacroCommand(commands: List[Command]) extends Command {
-  override def execute() =
+class MacroCommand(commands: List[Command]) extends Command {
+  override def execute(): Unit =
     commands.foreach(_.execute())
 }

@@ -3,7 +3,7 @@ package com.otus.commands
 import com.otus.Moveable
 import com.otus.model.Coordinates
 
-class MoveCommand(moveable: Moveable) extends Command {
+case class MoveCommand(moveable: Moveable) extends Command {
 
   override def execute(): Unit = {
     val currentPosition = moveable.getPosition
